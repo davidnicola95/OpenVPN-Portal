@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{{ brand_name }}{% endblock %}</title>
+<link rel="icon" href="{{ url_for('static', filename='mark.svg') }}" type="image/svg+xml">
+<link rel="stylesheet" href="{{ url_for('static', filename='portal.css', v='20260927') }}">
+<script src="{{ url_for('static', filename='portal.js', v='20260927') }}" defer></script></head>
+<body><a class="skip" href="#main">Skip to content</a>{% block body %}{% endblock %}
+<dialog id="confirm-dialog"><form method="dialog"><div class="dialog-icon">!</div><h2 id="confirm-title">Confirm action</h2><p id="confirm-message"></p><div class="dialog-actions"><button class="button secondary" value="cancel">Cancel</button><button class="button danger" id="confirm-submit" value="confirm">Confirm</button></div></form></dialog>
+</body></html>
