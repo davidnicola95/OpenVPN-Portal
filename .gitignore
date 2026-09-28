@@ -1,0 +1,17 @@
+.env
+.env.*
+!.env.example
+*.db
+*.db-*
+*.sqlite*
+*.log
+*.key
+*.pem
+*.crt
+*.ovpn
+pki/
+__pycache__/
+.venv/
+.pytest_cache/
+backups/
+instance/
