@@ -1,0 +1,4 @@
+# Compatibility baseline tested against the existing Debian deployment.
+Flask==2.2.2
+Werkzeug==2.2.2
+python-dotenv==0.21.0
