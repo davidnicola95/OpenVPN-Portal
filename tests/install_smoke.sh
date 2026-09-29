@@ -3,7 +3,16 @@
 set -euo pipefail
 [[ ${GITHUB_ACTIONS:-} == true ]] || { echo 'Use the isolated GitHub Actions workflow.' >&2; exit 1; }
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.."
-bash install.sh --domain vpn.example.com --reverse-proxy --port 11940 --subnet 10.250.77.0/24
+proxy_options=(--reverse-proxy)
+if [[ ${CI_HTTPS_MODE:-external-proxy} == caddy ]]; then proxy_options=(); fi
+bash install.sh --domain vpn.example.com "${proxy_options[@]}" --port 11940 --subnet 10.250.77.0/24
+if [[ ${CI_HTTPS_MODE:-external-proxy} == caddy ]]; then
+    caddy validate --config /etc/caddy/Caddyfile
+    grep -q '^vpn.example.com {' /etc/caddy/Caddyfile
+    [[ $(curl -s -o /dev/null -w '%{http_code}' -H 'Host: vpn.example.com' http://127.0.0.1/login) == 308 ]]
+    sha256sum /etc/caddy/Caddyfile > /tmp/portal-caddy.before
+    echo 'PASS: packaged Caddy default replaced, valid HTTPS configuration, and HTTP redirect'
+fi
 install -m 0644 tests/installed_portal_smoke.py /tmp/installed_portal_smoke.py
 runuser -u ovpnportal -- env PORTAL_ENV_FILE=/var/lib/openvpn-portal/portal.env \
     python3 /tmp/installed_portal_smoke.py issue
@@ -46,6 +55,7 @@ sha256sum /etc/openvpn/portal/easy-rsa/pki/private/ca.key /etc/openvpn/portal/se
 vpn_pid=$(systemctl show -p MainPID --value openvpn-server@portal)
 bash install.sh
 sha256sum --check /tmp/portal-identities.before
+if [[ ${CI_HTTPS_MODE:-external-proxy} == caddy ]]; then sha256sum --check /tmp/portal-caddy.before; fi
 [[ $(systemctl show -p MainPID --value openvpn-server@portal) == "$vpn_pid" ]]
 systemctl start openvpn-portal-crl.service
 systemctl is-active --quiet openvpn-portal openvpn-server@portal

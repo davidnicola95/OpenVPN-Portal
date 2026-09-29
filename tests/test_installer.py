@@ -62,6 +62,17 @@ class InstallerTests(unittest.TestCase):
         self.assertNotIn('tls-crypt', config)
         self.assertNotIn('auth-user-pass-verify', config)
 
+    def test_caddy_package_default_is_replaced_only_during_initial_setup(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            config = Path(tmp) / 'Caddyfile'
+            config.write_text(':80 {\n    respond "package default"\n}\n')
+            installer.configure_caddy(self.options(), config)
+            self.assertIn('vpn.example.com {', config.read_text())
+            self.assertIn('reverse_proxy 127.0.0.1:5000', config.read_text())
+            config.write_text('# administrator configuration\n')
+            installer.configure_caddy(self.options(completed=True), config)
+            self.assertEqual(config.read_text(), '# administrator configuration\n')
+
 
 if __name__ == '__main__':
     unittest.main()
