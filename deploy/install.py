@@ -214,10 +214,12 @@ def install(options, existing):
     if not easy.exists():
         shutil.copytree('/usr/share/easy-rsa', easy, symlinks=False)
     env = {**os.environ, 'EASYRSA_BATCH': '1', 'EASYRSA_ALGO': 'rsa', 'EASYRSA_KEY_SIZE': '2048',
-           'EASYRSA_REQ_CN': 'OpenVPN Portal CA', 'EASYRSA_CERT_EXPIRE': '825', 'EASYRSA_CRL_DAYS': '180'}
+           'EASYRSA_CERT_EXPIRE': '825', 'EASYRSA_CRL_DAYS': '180'}
+    env.pop('EASYRSA_REQ_CN', None)
 
     def easyrsa(*args):
-        run('./easyrsa', *args, cwd=easy, env=env)
+        command_env = {**env, 'EASYRSA_REQ_CN': 'OpenVPN Portal CA'} if args[0] == 'build-ca' else env
+        run('./easyrsa', *args, cwd=easy, env=command_env)
 
     if not (easy / 'pki').exists():
         easyrsa('init-pki')
