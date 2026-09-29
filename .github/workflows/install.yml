@@ -32,10 +32,15 @@ jobs:
   fresh-install:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    strategy:
+      matrix:
+        https-mode: [caddy, external-proxy]
     steps:
       - uses: actions/checkout@v4
       - name: Install and exercise a real disposable VPN
-        run: sudo --preserve-env=GITHUB_ACTIONS bash tests/install_smoke.sh
+        env:
+          CI_HTTPS_MODE: ${{ matrix.https-mode }}
+        run: sudo --preserve-env=GITHUB_ACTIONS,CI_HTTPS_MODE bash tests/install_smoke.sh
       - name: Show service diagnostics on failure
         if: failure()
         run: sudo journalctl -u openvpn-server@portal -u openvpn-portal -u openvpn-portal-crl --no-pager -n 100
