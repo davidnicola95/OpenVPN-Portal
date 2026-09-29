@@ -1,0 +1,46 @@
+name: Installation verification
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  application:
+    runs-on: ubuntu-24.04
+    container: debian:13-slim
+    steps:
+      - name: Install distribution dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends ca-certificates git python3-flask python3-dotenv gunicorn
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Confirm core application remains unchanged
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git diff --exit-code 0f80b46f6599cc59f6e8bd08239859ac51e394ee -- app.py templates static scripts/create_client.sh scripts/revoke_client.sh requirements.txt .env.example tests/test_portal.py
+      - name: Run portal and installer regression tests
+        run: python3 -m unittest discover -s tests -v
+      - name: Check installation shell scripts
+        run: bash -n install.sh scripts/firewall.sh scripts/renew_crl.sh tests/install_smoke.sh
+
+  fresh-install:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        https-mode: [caddy, external-proxy]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install and exercise a real disposable VPN
+        env:
+          CI_HTTPS_MODE: ${{ matrix.https-mode }}
+        run: sudo --preserve-env=GITHUB_ACTIONS,CI_HTTPS_MODE bash tests/install_smoke.sh
+      - name: Show service diagnostics on failure
+        if: failure()
+        run: sudo journalctl -u openvpn-server@portal -u openvpn-portal -u openvpn-portal-crl --no-pager -n 100

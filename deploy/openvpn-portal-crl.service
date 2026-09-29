@@ -1,0 +1,17 @@
+[Unit]
+Description=Renew the OpenVPN Portal certificate revocation list
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+Environment=EASYRSA_DIR=/etc/openvpn/portal/easy-rsa
+Environment=OPENVPN_DIR=/etc/openvpn/portal
+Environment=PKI_LOCK_PATH=/run/openvpn-portal-pki.lock
+ExecStart=/opt/openvpn-portal/scripts/renew_crl.sh
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/etc/openvpn/portal /run
