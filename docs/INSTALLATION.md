@@ -14,7 +14,7 @@ The installer selects the outbound interface from the IPv4 route to `1.1.1.1`; t
 
 The new-server configuration pushes full-tunnel IPv4 routing and DNS servers `1.1.1.1`/`1.0.0.1`. IPv6 is routed into the VPN and blocked by OpenVPN to prevent it bypassing an IPv4-only tunnel; this is not an IPv6 Internet VPN. OS/client DNS behavior should be checked on each supported platform.
 
-The installer adds only its own nftables tables. It does not flush other tables. Its initial firewall rules isolate VPN clients from the server, other VPN clients, and private/link-local network destinations; Internet-bound traffic is masqueraded through the selected interface. If LAN access is required, review `/etc/openvpn-portal/firewall.nft` and deliberately allow the exact destination subnets before the private-destination drop. Then run `sudo systemctl restart openvpn-portal-firewall`. Existing drop policies in other firewall tables still apply. Reapply this service if another firewall manager flushes the ruleset.
+The installer adds only its own nftables tables. It does not flush other tables. Its initial firewall rules isolate VPN clients from the server, other VPN clients, and private/link-local network destinations; Internet-bound traffic is masqueraded through the selected interface. If LAN access is required, review `/etc/openvpn-portal/firewall.nft` and deliberately allow the exact destination subnets before the private-destination drop. Then run `sudo systemctl reload openvpn-portal-firewall`. Existing drop policies in other firewall tables still apply. Reapply this service if another firewall manager flushes the ruleset.
 
 ## Installed files
 
