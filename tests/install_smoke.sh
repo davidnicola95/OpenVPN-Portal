@@ -4,8 +4,9 @@ set -euo pipefail
 [[ ${GITHUB_ACTIONS:-} == true ]] || { echo 'Use the isolated GitHub Actions workflow.' >&2; exit 1; }
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.."
 bash install.sh --domain vpn.example.com --reverse-proxy --port 11940 --subnet 10.250.77.0/24
+install -m 0644 tests/installed_portal_smoke.py /tmp/installed_portal_smoke.py
 runuser -u ovpnportal -- env PORTAL_ENV_FILE=/var/lib/openvpn-portal/portal.env \
-    python3 tests/installed_portal_smoke.py issue
+    python3 /tmp/installed_portal_smoke.py issue
 ip netns add portal-client
 cleanup() {
     if [[ -f /tmp/portal-client.pid ]]; then kill "$(cat /tmp/portal-client.pid)" 2>/dev/null || true; fi
@@ -34,7 +35,7 @@ if [[ $connected != true ]]; then cat /tmp/portal-client.log; exit 1; fi
 echo 'PASS: real OpenVPN client/server TLS handshake in a separate network namespace'
 cp /etc/openvpn/portal/easy-rsa/pki/issued/smokeclient.crt /tmp/issued-smokeclient.crt
 runuser -u ovpnportal -- env PORTAL_ENV_FILE=/var/lib/openvpn-portal/portal.env \
-    python3 tests/installed_portal_smoke.py revoke
+    python3 /tmp/installed_portal_smoke.py revoke
 if openssl verify -crl_check -CAfile /etc/openvpn/portal/ca.crt \
     -CRLfile /etc/openvpn/portal/crl.pem /tmp/issued-smokeclient.crt > /tmp/revocation-check.txt 2>&1; then
     echo 'Revoked certificate unexpectedly verified' >&2; exit 1
