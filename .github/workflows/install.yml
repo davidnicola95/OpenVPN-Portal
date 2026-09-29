@@ -16,7 +16,7 @@ jobs:
       - name: Install distribution dependencies
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends git python3-flask python3-dotenv gunicorn
+          apt-get install -y --no-install-recommends ca-certificates git python3-flask python3-dotenv gunicorn
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
