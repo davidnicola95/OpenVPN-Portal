@@ -75,6 +75,16 @@ def write_once(path, text, mode=0o644):
         write(path, text, mode)
 
 
+def configure_caddy(options, path=Path('/etc/caddy/Caddyfile')):
+    config = f"{options['domain']} {{\n    reverse_proxy 127.0.0.1:5000 {{\n        transport http {{\n            response_header_timeout 180s\n        }}\n    }}\n}}\n"
+    # The package creates a default Caddyfile during apt installation. Replace
+    # that default on initial setup, then preserve administrator edits on reruns.
+    if options.get('completed'):
+        write_once(path, config)
+    else:
+        write(path, config)
+
+
 def server_config(options):
     network = validate(options)
     return f'''port {options['port']}
@@ -269,11 +279,11 @@ def install(options, existing):
     write('/etc/systemd/system/openvpn-server@portal.service.d/portal.conf',
           '[Unit]\nRequires=openvpn-portal-firewall.service\nAfter=openvpn-portal-firewall.service\n')
     if not options['reverse_proxy']:
-        write_once('/etc/caddy/Caddyfile', f"{options['domain']} {{\n    reverse_proxy 127.0.0.1:5000 {{\n        transport http {{\n            response_header_timeout 180s\n        }}\n    }}\n}}\n")
+        configure_caddy(options)
         run('caddy', 'validate', '--config', '/etc/caddy/Caddyfile')
     run('systemctl', 'daemon-reload')
     run('systemctl', 'enable', 'openvpn-portal-firewall', 'openvpn-server@portal', 'openvpn-portal', 'openvpn-portal-crl.timer')
-    run('systemctl', 'restart', 'openvpn-portal-firewall')
+    run('systemctl', 'reload-or-restart', 'openvpn-portal-firewall')
     run('systemctl', 'start', 'openvpn-server@portal')
     run('systemctl', 'restart', 'openvpn-portal')
     run('systemctl', 'start', 'openvpn-portal-crl.timer')
