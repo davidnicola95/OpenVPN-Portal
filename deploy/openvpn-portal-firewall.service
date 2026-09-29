@@ -1,0 +1,13 @@
+[Unit]
+Description=OpenVPN Portal forwarding and NAT rules
+Before=openvpn-server@portal.service
+After=network-pre.target nftables.service
+Wants=network-pre.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/openvpn-portal/scripts/firewall.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

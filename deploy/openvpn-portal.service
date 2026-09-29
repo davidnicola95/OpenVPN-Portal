@@ -1,0 +1,23 @@
+[Unit]
+Description=OpenVPN account portal
+After=network.target openvpn-server@portal.service
+
+[Service]
+User=ovpnportal
+Group=ovpnportal
+WorkingDirectory=/opt/openvpn-portal
+Environment=PORTAL_ENV_FILE=/var/lib/openvpn-portal/portal.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/usr/bin/gunicorn --bind 127.0.0.1:5000 --workers 2 --threads 2 --timeout 180 --access-logfile - --error-logfile - wsgi:app
+Restart=on-failure
+UMask=0077
+# The unchanged PKI scripts run through one root-owned, argument-validating sudo helper.
+# NoNewPrivileges must remain off for that narrowly scoped sudo command to work.
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/openvpn-portal /etc/openvpn/portal /run
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily OpenVPN Portal CRL renewal
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+RandomizedDelaySec=1h
+
+[Install]
+WantedBy=timers.target
